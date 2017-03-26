@@ -4,7 +4,7 @@ TEMPLATE/CONTAINER
 This project exists to help bootstrap projects which build containers. The idea is to clone this project to get a skeleton. However, unlike a skeleton, the project has enough content to demonstrate the moving parts of the application.
 
 Steps for cloning a project:
-1. Go to http://usmar-gitlab01.us.oracle.com/createGitlabProject.cgi
+1. Go to <xyz>
 2. Use the link above to create the project in gitlab. This will also setup the Gitlab->Jenkins CI/CD linkages.
 3. Clone this project.
 4. Remove the old source code & tests
