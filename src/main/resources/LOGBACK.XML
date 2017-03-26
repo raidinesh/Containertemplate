@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- This include seems to be common to spring apps -->
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <springProperty scope="context" name="spring_app_name" source="spring.application.name"/>
+  
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+    ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+    <destination>${LOGSTASH_IP:-logstash}:${LOGSTASH_PORT:-12000}</destination>
+    <reconnectionDelay>1 second</reconnectionDelay>    
+    <!-- encoder is required -->
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <customFields>{"container_id":"${HOSTNAME}","product_version":"1.0.0"}
+      </customFields>
+      <!--- This is a workaround for a bug in the logstash encoder -->
+      <provider class="net.logstash.logback.composite.loggingevent.ArgumentsJsonProvider"/>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="stash" />
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>
+

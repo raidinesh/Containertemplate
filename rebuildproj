@@ -1,0 +1,35 @@
+#!/bin/bash
+if [ ! -d robot ]; then
+    echo "Run this script in the project root directory"
+    exit 1
+fi
+
+usage () {
+   echo "Usage: "
+   echo "rebuildproj [-c]"
+   echo " Rebuilds the java classes, builds the docker images and launches the docker containers"
+   echo " -c do not attempt to clean up docker images"
+}
+
+CLEAN_DOCKER_IMAGES=cleanDockerImages
+while getopts ":c" opt; do
+    case $opt in
+        c) echo "skip cleaning docker images"
+           CLEAN_DOCKER_IMAGES=
+           ;;
+        \?) echo "Invalid argument: -${OPTARG}" >&2
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+(cd robot/topology; docker-compose down); \
+./gradlew clean ${CLEAN_DOCKER_IMAGES} assemble buildDockerImages && \
+(cd robot/topology; docker-compose up -d ) && \
+(echo -n "sleeping..."; sleep 60; echo "done")
+
+# alternatively, you could run this
+echo "Run this command to follow the application logs"
+echo "  'docker logs -f topology_sut_1' "
+exit 0

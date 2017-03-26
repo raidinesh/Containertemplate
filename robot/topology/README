@@ -1,0 +1,23 @@
+# These instructions assume that 
+# 1) There is a well-known docker host.
+# 2) the docker images for the sut and test driver have been pushed to a repository OR have been built/installed directly on the target docker host.
+# 3) The following two environment variables are set
+#   ELASTICSEARCH_IP
+#   EXECUTION_ID
+
+Copy the docker-compose.yml file to the target system - e.g /tmp/docker-compose.yml
+# This command will deploy and start the containers:
+docker-compose up -d
+# Run the acceptance test
+docker-compose exec test /test/runTests.sh
+# When this command returns, the tests are done. You can view/collect the test results
+http://<docker host ip>:9080/testResultsResults
+# 
+# For example:
+wget http://<docker host ip>:9080/testResults/report.html
+
+# Now shutdown the test harness
+docker-compose stop
+
+# If you want to completely clean up
+docker-compose down

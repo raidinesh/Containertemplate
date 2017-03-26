@@ -1,0 +1,43 @@
+server:
+  port: 8120
+
+ocpm:
+  doubleit:
+    value: 7
+  
+info:
+  maintainer: 'cv.raidinesh@gmail.com'
+  app_name: "ContainerExample"
+  app_version: "1.0.0"
+
+endpoints:
+  health:
+    sensitive: false
+  restart:
+    enabled: true
+  shutdown:
+    enabled: true
+
+logging:
+  level:
+    ROOT: INFO
+    org.springframework.web: WARN
+
+spring:
+  zipkin:
+    baseUrl: http://${ZIPKIN_URL}
+  cloud:
+    config:
+      uri: http://configserver:8888
+
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${EUREKA_HOST}:${EUREKA_PORT}/eureka/
+

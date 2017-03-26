@@ -1,0 +1,57 @@
+logstash-forwarder:
+  image: usmar-docker-registry01.us.oracle.com/ocpm-logstash-forwarder:1.1.0
+  environment:
+    - ELASTICSEARCH_IP=${ELASTICSEARCH_IP}
+    - CLUSTER_ID=${EXECUTION_ID}
+  ports:
+    - "12000:12000"
+    - "12001:12001"
+
+discovery:
+  image: usmar-docker-registry01.us.oracle.com/ocpm-eureka-server:0.0.1
+  hostname: discovery
+  environment:
+    - EUREKA_HOST=discovery
+    - EUREKA_PORT=8761
+    - no_proxy=discovery,localhost
+  ports:
+    - "8761:8761"
+
+configserver:
+  image: usmar-docker-registry01.us.oracle.com/chris-config-service:0.0.1
+  ports:
+    - "8888:8888"
+  links:
+    - discovery
+  environment:
+    - GIT_URL=http://usmar-gitlab01.us.oracle.com:81/template/example-config-store.git
+    - EUREKA_HOST=discovery
+    - EUREKA_PORT=8761
+    - no_proxy=discovery
+
+sut:
+  image: usmar-docker-registry01.us.oracle.com/ocpm-container-example:latest
+  ports:
+    - "8120:8120"
+  links:
+    - discovery
+    - logstash-forwarder
+    - configserver
+  environment:
+    - EUREKA_HOST=discovery
+    - EUREKA_PORT=8761
+    - LOGSTASH_IP=logstash-forwarder
+    - LOGSTASH_PORT=12001
+    - ZIPKIN_URL=zipkin:9411
+    - no_proxy=discovery,configserver
+#    - DEBUG=1
+
+test:
+  image: usmar-docker-registry01.us.oracle.com/cucumber-test-container-example:latest
+  links:
+    - sut
+  environment:
+    - SUT=sut
+  ports:
+    - "9080:80"
+    - "14000:22"

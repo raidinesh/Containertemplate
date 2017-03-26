@@ -1,0 +1,143 @@
+buildscript {
+  ext {
+    springBootVersion = '1.4.2.RELEASE'
+  }
+  repositories {
+    ivy {
+      layout "maven"
+      url "${nexusUrl}/nexus/content/repositories/releases"
+    }
+    maven {
+      url "${nexusUrl}/nexus/content/repositories/jcenter/"
+    }
+  }
+
+  dependencies {
+    classpath group: 'ocpm.buildplugin', name: 'buildplugin', version: '0.13.0'
+    classpath group: 'ocpm.buildplugin', name: 'dockerplugin', version: '2.0.1'
+    classpath group: 'ocpm.buildplugin', name: 'jacoco_client_plugin', version: '0.1.0'
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+  }
+}
+
+// There are different ways to specify plugins. As gradle converges to a consistent solution, so shall we.
+plugins {
+  id "org.sonarqube" version "2.2"
+  id 'java'
+}
+
+apply plugin: 'ocpm.buildplugin'
+// The buildplugin must be applied first.
+apply plugin: 'ocpm.dockerplugin'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'ocpm.jacoco_client_plugin'
+
+dependencyManagement {
+  imports {
+    mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR5'
+  }
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+repositories {
+  maven {
+    credentials {
+      username "${nexusUsername}"
+      password "${nexusPassword}"
+    }
+    url "${nexusUrl}/nexus/content/repositories/central"
+  }
+}
+
+// TODO: Define your docker containers. The pattern is name {contents  {closure}}
+dockerImages {
+    'ocpm-container-example' {
+    contents {
+      pullJar {
+        fromDir = 'build/libs'
+        includePattern = '**/*'
+      }
+      pullDockerfile {
+        fromDir = 'src/main/docker'
+        includePattern = 'Dockerfile'
+      }
+    }
+  }
+    'ocpm-test-container-example' {
+    contents {
+      pullRobotDir {
+        fromDir = 'robot/image'
+        includePattern = '**/*'
+      }
+    }
+  }
+    'cucumber-test-container-example' {
+    contents {
+      pullCucumberDir {
+        fromDir = 'cucumber/image'
+        includePattern = '**/*'
+      }
+    }
+  }
+}
+
+dependencies {
+  // The production code uses the SLF4J logging API at compile time
+  compile 'org.slf4j:slf4j-api:1.7.21'
+  compile 'ch.qos.logback:logback-core:1.1.3'
+  compile 'ch.qos.logback:logback-classic:1.1.3'
+  compile 'net.logstash.logback:logstash-logback-encoder:4.5.1'
+
+  // Spring
+  compile 'org.springframework.cloud:spring-cloud-starter'
+  compile 'org.springframework.cloud:spring-cloud-starter-config'
+  compile 'org.springframework.cloud:spring-cloud-starter-eureka'
+  compile 'org.springframework.cloud:spring-cloud-starter-zipkin'
+  compile("org.springframework.boot:spring-boot-starter-web") {
+    exclude module: "spring-boot-starter-tomcat"
+  }
+  compile("org.springframework.boot:spring-boot-starter-actuator")
+    
+
+  // You can read more about how to add dependency here:
+  //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
+  testCompile group: 'junit', name: 'junit', version: '4.12'
+  testCompile('org.springframework.boot:spring-boot-starter-test')
+  // Not completely sure about the line below.
+  testCompile('org.springframework.boot:spring-boot-test-autoconfigure')
+}
+
+// ------------------------------------------------------------------------------------------------
+// Project-specific constant
+// We need a way to suppress archive pushing if we only care about
+// the container.
+tasks.uploadArchives {
+  enabled = false
+}
+
+// Configure where JaCoCo client places the integration test data.
+jacocoClientSetting {
+  destFile = "${buildDir}/jacoco/it/jacoco_it.exec"
+}
+
+// Add the JaCoCo integration test data to the SonarQube report.
+sonarqube {
+  properties {
+    property "sonar.jacoco.itReportPath", "${buildDir}/jacoco/it/jacoco_it.exec"
+  }
+}
+
+// This line prevents our tarballs from having the version # embedded in them.
+jar {
+  baseName = 'containerExample'
+  archiveName "${baseName}.jar"
+}
+
+buildDockerImages {
+  // This requires assemble to run
+  dependsOn 'assemble'
+}

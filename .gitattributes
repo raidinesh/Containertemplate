@@ -1,0 +1,3 @@
+# Force gradle2 to have a lf, regardless of platform. This way 
+# projects mounted from windows work fine.
+gradlew eol=lf

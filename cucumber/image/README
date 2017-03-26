@@ -1,0 +1,2 @@
+> docker build -t usmar-docker-registry01.us.oracle.com/cucumber-test-container-example .
+After you build the container, you should be able to enter it and exec the test script.
