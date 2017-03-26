@@ -35,7 +35,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.define "dockerHost" do |vm1|
     vm1.vm.box = "OL7DevBox-1.0.8.box"
-    vm1.vm.box_url = "http://usmar-buildserver01.us.oracle.com/boxen/OL7DevBox-1.0.8.box"
+    vm1.vm.box_url = "BOX URL"
     vm1.vm.hostname = "dockerHost"
     # Create a custom forwarded port.
     # Forward a port used by our test drivers to expose results
